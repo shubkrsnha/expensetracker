@@ -1,0 +1,277 @@
+/* ==========================================
+   SIDEBAR
+========================================== */
+
+.sidebar {
+  position: fixed;
+
+  top: 0;
+  left: 0;
+
+  width: 250px;
+  height: 100vh;
+
+  box-sizing: border-box;
+
+  padding: 22px 14px;
+
+  background: #171b18;
+  color: #ffffff;
+
+  display: flex;
+  flex-direction: column;
+
+  z-index: 1000;
+
+  transition:
+    width 0.25s ease,
+    padding 0.25s ease;
+
+  box-shadow: 4px 0 20px rgb(0 0 0 / 8%);
+}
+
+
+/* ==========================================
+   COLLAPSED
+========================================== */
+
+.sidebar-collapsed {
+  width: 78px;
+
+  padding-right: 10px;
+  padding-left: 10px;
+}
+
+
+/* ==========================================
+   HEADER
+========================================== */
+
+.sidebar-header {
+  height: 50px;
+
+  margin-bottom: 35px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  font-size: 19px;
+  font-weight: 800;
+
+  white-space: nowrap;
+}
+
+
+.logo-mark,
+.sidebar-logo-collapsed {
+  width: 38px;
+  height: 38px;
+
+  border-radius: 10px;
+
+  background: #3d2020;
+  color: #ffffff;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 13px;
+  font-weight: 900;
+}
+
+
+.sidebar-logo-collapsed {
+  margin: auto;
+}
+
+
+/* ==========================================
+   TOGGLE
+========================================== */
+
+.sidebar-toggle {
+  width: 32px;
+  height: 32px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #252b26;
+
+  /* Increased contrast */
+  color: #dce5df;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 17px;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+
+.sidebar-toggle:hover {
+  background: #303830;
+  color: #ffffff;
+}
+
+
+/* ==========================================
+   NAVIGATION
+========================================== */
+
+.sidebar-navigation {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+
+/* ==========================================
+   LINKS
+========================================== */
+
+.sidebar-link {
+  min-height: 48px;
+
+  box-sizing: border-box;
+
+  padding: 0 14px;
+
+  border-radius: 11px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+
+  /* Increased contrast */
+  color: #c8d1cb;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  text-decoration: none;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+
+.sidebar-link:hover {
+  background: #242b25;
+  color: #ffffff;
+}
+
+
+.sidebar-link.active {
+  background: #2c382d;
+
+  /* Increased contrast */
+  color: #a8e09f;
+}
+
+
+/* ==========================================
+   ICON
+========================================== */
+
+.sidebar-icon {
+  width: 26px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 19px;
+}
+
+
+/* ==========================================
+   COLLAPSED LINKS
+========================================== */
+
+.sidebar-collapsed .sidebar-link {
+  justify-content: center;
+
+  padding-right: 0;
+  padding-left: 0;
+}
+
+
+/* ==========================================
+   BOTTOM
+========================================== */
+
+.sidebar-bottom {
+  margin-top: auto;
+}
+
+
+/* ==========================================
+   LOGOUT
+========================================== */
+
+.sidebar-logout {
+  width: 100%;
+  min-height: 48px;
+
+  padding: 0 14px;
+
+  border: none;
+  border-radius: 11px;
+
+  background: transparent;
+
+  /* Increased contrast */
+  color: #f0b0b0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  text-align: left;
+}
+
+
+.sidebar-logout:hover {
+  background: #5a3030;
+  color: #ffffff;
+}
+
+
+/* ==========================================
+   COLLAPSED LOGOUT
+========================================== */
+
+.sidebar-collapsed .sidebar-logout {
+  justify-content: center;
+
+  padding-right: 0;
+  padding-left: 0;
+}

@@ -1,0 +1,188 @@
+.public-header {
+  height: 76px;
+
+  padding: 0 6%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #e6ebe6;
+
+  position: sticky;
+  top: 0;
+
+  z-index: 1000;
+}
+
+.public-logo {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  text-decoration: none;
+
+  color: #18221a;
+
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.public-logo > span:last-child > span {
+  color: #5c9b57;
+}
+
+.public-logo-icon {
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #1c281e;
+
+  color: #7fd178;
+
+  border-radius: 10px;
+
+  font-size: 21px;
+}
+
+.public-navigation {
+  display: flex;
+
+  align-items: center;
+
+  gap: 36px;
+}
+
+.public-nav-link {
+  position: relative;
+
+  padding: 28px 0;
+
+  text-decoration: none;
+
+  color: #737b74;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.public-nav-link:hover {
+  color: #18221a;
+}
+
+.public-nav-link.active {
+  color: #4e9149;
+}
+
+.public-nav-link.active::after {
+  content: "";
+
+  position: absolute;
+
+  bottom: 17px;
+
+  left: 0;
+  right: 0;
+
+  height: 2px;
+
+  background: #5c9b57;
+}
+
+.public-actions {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+}
+
+.public-login-button,
+.public-dashboard-button {
+  border: none;
+
+  background: transparent;
+
+  padding: 11px 17px;
+
+  border-radius: 9px;
+
+  color: #354036;
+
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.public-login-button:hover {
+  background: #f1f5f0;
+}
+
+.public-start-button {
+  border: none;
+
+  padding: 12px 18px;
+
+  border-radius: 9px;
+
+  background: #1c281e;
+
+  color: #ffffff;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  display: flex;
+
+  gap: 8px;
+
+  align-items: center;
+}
+
+.public-start-button:hover {
+  background: #4e9149;
+}
+
+.public-logout-button {
+  border: none;
+
+  background: transparent;
+
+  color: #d45c68;
+
+  cursor: pointer;
+
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+
+  .public-header {
+    padding: 0 18px;
+  }
+
+  .public-navigation {
+    display: none;
+  }
+
+  .public-logo {
+    font-size: 18px;
+  }
+
+  .public-logo-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .public-start-button {
+    display: none;
+  }
+}

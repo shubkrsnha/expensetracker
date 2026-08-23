@@ -1,0 +1,741 @@
+/* ==========================================
+   EXPENSES PAGE
+========================================== */
+
+.expenses-page {
+  min-height: 100vh;
+  background: #f5f7f5;
+  padding: 40px 45px 60px;
+  color: #18221a;
+}
+
+
+/* ==========================================
+   HEADER
+========================================== */
+
+.expenses-header {
+  max-width: 1450px;
+  margin: 0 auto 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+}
+
+.expenses-eyebrow {
+  color: #3f7545;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.expenses-header h1 {
+  margin: 7px 0 5px;
+  font-size: 38px;
+  letter-spacing: -1.5px;
+  color: #18221a;
+}
+
+.expenses-header p {
+  margin: 0;
+  color: #59645b;
+  font-size: 15px;
+}
+
+
+/* ==========================================
+   ADD BUTTON
+========================================== */
+
+.expenses-add-button {
+  border: none;
+  background: #18221a;
+  color: #ffffff;
+  padding: 14px 20px;
+  border-radius: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.expenses-add-button span {
+  font-size: 21px;
+}
+
+.expenses-add-button:hover {
+  transform: translateY(-2px);
+  background: #101610;
+}
+
+
+/* ==========================================
+   ERROR
+========================================== */
+
+.expenses-error {
+  max-width: 1450px;
+  margin: 0 auto 20px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  background: #fff1f1;
+  border: 1px solid #efcaca;
+  color: #b42318;
+  font-size: 13px;
+}
+
+
+/* ==========================================
+   TOOLBAR
+========================================== */
+
+.expenses-toolbar {
+  max-width: 1450px;
+  margin: 0 auto 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.expenses-search {
+  flex: 1;
+  max-width: 600px;
+  height: 44px;
+  background: #ffffff;
+  border: 1px solid #dfe5df;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 14px;
+  box-sizing: border-box;
+}
+
+.expenses-search span {
+  color: #59645b;
+  font-size: 21px;
+}
+
+.expenses-search input {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: #18221a;
+  background: transparent;
+}
+
+.expenses-search input::placeholder {
+  color: #59645b;
+}
+
+.expenses-toolbar select {
+  height: 44px;
+  padding: 0 13px;
+  background: #ffffff;
+  border: 1px solid #dfe5df;
+  border-radius: 10px;
+  color: #59645b;
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+}
+
+
+/* ==========================================
+   EXPENSE CARD
+========================================== */
+
+.expenses-card {
+  max-width: 1450px;
+  margin: 0 auto;
+  background: #ffffff;
+  border: 1px solid #e3e8e3;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+
+/* ==========================================
+   TABLE HEADER
+========================================== */
+
+.expenses-table-header {
+  display: grid;
+  grid-template-columns:
+    2fr
+    1fr
+    1fr
+    1fr
+    1fr
+    1.3fr;
+  gap: 20px;
+  padding: 16px 25px;
+  background: #fafbfa;
+  border-bottom: 1px solid #e8ece8;
+  color: #59645b;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+}
+
+
+/* ==========================================
+   EXPENSE ITEM
+========================================== */
+
+.expense-item {
+  display: grid;
+  grid-template-columns:
+    2fr
+    1fr
+    1fr
+    1fr
+    1fr
+    1.3fr;
+  align-items: center;
+  gap: 20px;
+  padding: 17px 25px;
+  border-bottom: 1px solid #edf0ed;
+  transition: background-color 0.15s ease;
+}
+
+.expense-item:last-child {
+  border-bottom: none;
+}
+
+.expense-item:hover {
+  background: #fbfcfb;
+}
+
+
+/* ==========================================
+   TITLE
+========================================== */
+
+.expense-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.expense-category-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: #eef5ec;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.expense-title > div:last-child {
+  min-width: 0;
+}
+
+.expense-title strong {
+  display: block;
+  color: #18221a;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.expense-title small {
+  display: block;
+  margin-top: 3px;
+  color: #59645b;
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* ==========================================
+   COLUMNS
+========================================== */
+
+.expense-category {
+  color: #59645b;
+  font-size: 12px;
+}
+
+.expense-payment {
+  color: #59645b;
+  font-size: 12px;
+}
+
+.expense-date {
+  color: #59645b;
+  font-size: 12px;
+}
+
+.expense-amount {
+  font-size: 14px;
+  font-weight: 700;
+  color: #18221a;
+}
+
+
+/* ==========================================
+   ACTIONS
+========================================== */
+
+.expense-actions {
+  display: flex;
+  gap: 7px;
+}
+
+.edit-button,
+.delete-button {
+  border-radius: 7px;
+  padding: 7px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.edit-button {
+  background: #eef5ec;
+  border: 1px solid #dce9da;
+  color: #3f7545;
+}
+
+.delete-button {
+  background: #ffffff;
+  border: 1px solid #dfe5df;
+  color: #7a4b4b;
+}
+
+.edit-button:hover {
+  background: #e3f0e1;
+  color: #315e36;
+}
+
+.delete-button:hover {
+  color: #b42318;
+  border-color: #efcaca;
+  background: #fff7f7;
+}
+
+
+/* ==========================================
+   EMPTY STATE
+========================================== */
+
+.expenses-empty {
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.expenses-empty-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 17px;
+  background: #eef5ec;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 25px;
+  margin-bottom: 15px;
+}
+
+.expenses-empty h2 {
+  margin: 0;
+  color: #18221a;
+  font-size: 20px;
+}
+
+.expenses-empty p {
+  color: #59645b;
+  font-size: 13px;
+  margin: 8px 0 18px;
+}
+
+.expenses-empty button {
+  border: none;
+  background: #3f7545;
+  color: #ffffff;
+  padding: 11px 17px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.expenses-empty button:hover {
+  background: #315e36;
+}
+
+
+/* ==========================================
+   PAGINATION
+========================================== */
+
+.expenses-pagination {
+  max-width: 1450px;
+  margin: 20px auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.expenses-pagination button {
+  border: 1px solid #dfe5df;
+  background: #ffffff;
+  color: #59645b;
+  padding: 9px 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.expenses-pagination button:hover:not(:disabled) {
+  background: #f1f5f1;
+  color: #18221a;
+}
+
+.expenses-pagination button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.expenses-pagination span {
+  color: #59645b;
+  font-size: 12px;
+}
+
+
+/* ==========================================
+   MODAL OVERLAY
+========================================== */
+
+.expense-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgb(18 25 19 / 55%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+
+/* ==========================================
+   MODAL
+========================================== */
+
+.expense-modal {
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 28px;
+  box-sizing: border-box;
+  box-shadow:
+    0 25px 70px rgb(0 0 0 / 20%);
+}
+
+
+/* ==========================================
+   MODAL HEADER
+========================================== */
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 25px;
+}
+
+.modal-header span {
+  color: #3f7545;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.modal-header h2 {
+  margin: 5px 0 0;
+  color: #18221a;
+  font-size: 25px;
+  letter-spacing: -0.7px;
+}
+
+.modal-close {
+  border: none;
+  background: #f1f3f1;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  font-size: 22px;
+  color: #59645b;
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  background: #e5e9e5;
+  color: #18221a;
+}
+
+
+/* ==========================================
+   FORM
+========================================== */
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 17px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.form-group label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #59645b;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #dfe5df;
+  border-radius: 9px;
+  background: #fafbfa;
+  padding: 11px 12px;
+  outline: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: #18221a;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #59645b;
+}
+
+.form-group textarea {
+  resize: vertical;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #3f7545;
+  background: #ffffff;
+  box-shadow:
+    0 0 0 3px rgb(63 117 69 / 15%);
+}
+
+
+/* ==========================================
+   MODAL ACTIONS
+========================================== */
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #edf0ed;
+}
+
+.cancel-button,
+.save-button {
+  padding: 11px 17px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cancel-button {
+  border: 1px solid #dfe5df;
+  background: #ffffff;
+  color: #59645b;
+}
+
+.cancel-button:hover:not(:disabled) {
+  background: #f5f7f5;
+  color: #18221a;
+}
+
+.save-button {
+  border: none;
+  background: #18221a;
+  color: #ffffff;
+}
+
+.save-button:hover:not(:disabled) {
+  background: #101610;
+}
+
+.save-button:disabled,
+.cancel-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+/* ==========================================
+   LOADING
+========================================== */
+
+.expenses-loading {
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #59645b;
+}
+
+.expenses-spinner {
+  width: 34px;
+  height: 34px;
+  border: 4px solid #dce8da;
+  border-top-color: #3f7545;
+  border-radius: 50%;
+  animation:
+    expenses-spin 0.8s linear infinite;
+  margin-bottom: 14px;
+}
+
+@keyframes expenses-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* ==========================================
+   RESPONSIVE - TABLET
+========================================== */
+
+@media (max-width: 1100px) {
+  .expenses-table-header {
+    display: none;
+  }
+
+  .expense-item {
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    padding: 18px 20px;
+  }
+
+  .expense-title {
+    grid-column: 1;
+  }
+
+  .expense-category,
+  .expense-payment,
+  .expense-date {
+    display: none;
+  }
+
+  .expense-amount {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .expense-actions {
+    grid-column: 1 / -1;
+  }
+}
+
+
+/* ==========================================
+   RESPONSIVE - MOBILE
+========================================== */
+
+@media (max-width: 800px) {
+  .expenses-page {
+    padding: 28px 22px 45px;
+  }
+
+  .expenses-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .expenses-add-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .expenses-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .expenses-search {
+    max-width: none;
+    flex-basis: 100%;
+  }
+
+  .expenses-toolbar select {
+    flex: 1;
+  }
+}
+
+
+/* ==========================================
+   RESPONSIVE - SMALL MOBILE
+========================================== */
+
+@media (max-width: 550px) {
+  .expenses-page {
+    padding: 20px 15px 40px;
+  }
+
+  .expenses-header h1 {
+    font-size: 30px;
+  }
+
+  .expenses-card {
+    border-radius: 14px;
+  }
+
+  .expense-item {
+    padding: 15px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .expense-modal {
+    padding: 22px 18px;
+    border-radius: 17px;
+  }
+
+  .expenses-pagination {
+    gap: 10px;
+  }
+}
