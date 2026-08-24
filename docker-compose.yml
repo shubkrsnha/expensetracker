@@ -1,0 +1,146 @@
+services:
+
+  mongodb:
+    image: mongo:8
+    container_name: expense-mongodb
+    restart: unless-stopped
+
+    ports:
+      - "27017:27017"
+
+    volumes:
+      - mongodb_data:/data/db
+
+    networks:
+      - expense-network
+
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  auth-service:
+    build:
+      context: ./backend/services/auth-service
+      dockerfile: Dockerfile
+
+    container_name: auth-service
+
+    ports:
+      - "5004:5004"
+
+    environment:
+      PORT: 5004
+      MONGO_URI: mongodb://mongodb:27017/expense_tracker
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
+
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+    networks:
+      - expense-network
+
+    restart: unless-stopped
+
+
+  expense-service:
+    build:
+      context: ./backend/services/expense-service
+      dockerfile: Dockerfile
+
+    container_name: expense-service
+
+    ports:
+      - "5001:5001"
+
+    environment:
+      PORT: 5001
+      MONGO_URI: mongodb://mongodb:27017/expense_tracker
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+    networks:
+      - expense-network
+
+    restart: unless-stopped
+
+
+  analytics-service:
+    build:
+      context: ./backend/services/analytics-service
+      dockerfile: Dockerfile
+
+    container_name: analytics-service
+
+    ports:
+      - "5002:5002"
+
+    environment:
+      PORT: 5002
+      NODE_ENV: ${NODE_ENV:-development}
+      EXPENSE_SERVICE_URL: http://expense-service:5001
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+
+    depends_on:
+      expense-service:
+        condition: service_started
+
+    networks:
+      - expense-network
+
+    restart: unless-stopped
+
+
+  api-gateway:
+    build:
+      context: ./backend/services/api-gateway
+      dockerfile: Dockerfile
+
+    container_name: api-gateway
+
+    ports:
+      - "5003:5003"
+
+    environment:
+      PORT: 5003
+      JWT_SECRET: ${JWT_SECRET}
+
+      AUTH_SERVICE_URL: http://auth-service:5004
+      EXPENSE_SERVICE_URL: http://expense-service:5001
+      ANALYTICS_SERVICE_URL: http://analytics-service:5002
+
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
+
+    depends_on:
+      auth-service:
+        condition: service_started
+      expense-service:
+        condition: service_started
+      analytics-service:
+        condition: service_started
+
+    networks:
+      - expense-network
+
+    restart: unless-stopped
+
+
+networks:
+  expense-network:
+    driver: bridge
+
+
+volumes:
+  mongodb_data:
