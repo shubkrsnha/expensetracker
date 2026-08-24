@@ -1,148 +1,38 @@
-services:
+name: DevSecOps Pipeline
 
-  # ==========================================
-  # FRONTEND
-  # ==========================================
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+on:
+  push:
+    branches:
+      - main
 
-    container_name: expense-frontend
+  pull_request:
+    branches:
+      - main
 
-    depends_on:
-      - api-gateway
+jobs:
 
-    ports:
-      - "8080:80"
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
 
-    restart: unless-stopped
+    steps:
 
-    networks:
-      - expense-network
+      - name: Checkout source code
+        uses: actions/checkout@v5
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
 
-  # ==========================================
-  # AUTH SERVICE
-  # ==========================================
-  auth-service:
-    build:
-      context: ./backend/services/auth-service
-      dockerfile: Dockerfile
+      - name: Install dependencies
+        working-directory: backend/expense-service
+        run: npm ci
 
-    container_name: auth-service
+      - name: Run tests
+        working-directory: backend/expense-service
+        run: npm test
 
-    ports:
-      - "5004:5004"
-
-    environment:
-      PORT: 5004
-      MONGO_URI: mongodb://delivery-mongodb:27017/expense_tracker
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
-
-    networks:
-      - expense-network
-
-    restart: unless-stopped
-
-
-  # ==========================================
-  # EXPENSE SERVICE
-  # ==========================================
-  expense-service:
-    build:
-      context: ./backend/services/expense-service
-      dockerfile: Dockerfile
-
-    container_name: expense-service
-
-    ports:
-      - "5001:5001"
-
-    environment:
-      PORT: 5001
-      MONGO_URI: mongodb://delivery-mongodb:27017/expense_tracker
-      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
-
-    networks:
-      - expense-network
-
-    restart: unless-stopped
-
-
-  # ==========================================
-  # ANALYTICS SERVICE
-  # ==========================================
-  analytics-service:
-    build:
-      context: ./backend/services/analytics-service
-      dockerfile: Dockerfile
-
-    container_name: analytics-service
-
-    ports:
-      - "5002:5002"
-
-    environment:
-      PORT: 5002
-      NODE_ENV: ${NODE_ENV:-development}
-      EXPENSE_SERVICE_URL: http://expense-service:5001
-      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
-
-    depends_on:
-      - expense-service
-
-    networks:
-      - expense-network
-
-    restart: unless-stopped
-
-
-  # ==========================================
-  # API GATEWAY
-  # ==========================================
-  api-gateway:
-    build:
-      context: ./backend/services/api-gateway
-      dockerfile: Dockerfile
-
-    container_name: api-gateway
-
-    ports:
-      - "5003:5003"
-
-    environment:
-      PORT: 5003
-
-      JWT_SECRET: ${JWT_SECRET}
-
-      AUTH_SERVICE_URL: http://auth-service:5004
-      EXPENSE_SERVICE_URL: http://expense-service:5001
-      ANALYTICS_SERVICE_URL: http://analytics-service:5002
-
-      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
-
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
-
-      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
-      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
-
-    depends_on:
-      - auth-service
-      - expense-service
-      - analytics-service
-
-    networks:
-      - expense-network
-
-    restart: unless-stopped
-
-
-# ==========================================
-# NETWORK
-# ==========================================
-networks:
-  expense-network:
-    name: expense-tracker_expense-network
-    external: true
+      - name: Build application
+        working-directory: backend/expense-service
+        run: npm run build --if-present
