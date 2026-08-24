@@ -44,7 +44,7 @@ jobs:
         run: npm ci
 
       - name: Install API Gateway dependencies
-        working-directory: backend/api-gateway
+        working-directory: backend/services/api-gateway
         run: npm ci
 
       - name: Run Auth Service tests
