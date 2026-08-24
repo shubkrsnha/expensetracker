@@ -2,17 +2,14 @@ FROM node:24-alpine
 
 WORKDIR /app
 
-# Copy only dependency files
+# Copy dependency files first for better Docker layer caching
 COPY package.json package-lock.json ./
 
 # Install production dependencies
 RUN npm ci --omit=dev
 
-# Copy only application source
-COPY src ./src
-
-# Copy only required application files
-COPY server.js ./
+# Copy application source
+COPY . .
 
 # Run as non-root user
 USER node
