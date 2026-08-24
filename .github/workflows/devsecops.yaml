@@ -1,0 +1,129 @@
+name: DevSecOps Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+
+  # ==========================================
+  # PHASE 1 - BUILD & TEST
+  # ==========================================
+
+  build-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/services/*/package-lock.json
+
+      - name: Install Auth Service dependencies
+        working-directory: backend/services/auth-service
+        run: npm ci
+
+      - name: Install Expense Service dependencies
+        working-directory: backend/services/expense-service
+        run: npm ci
+
+      - name: Install Analytics Service dependencies
+        working-directory: backend/services/analytics-service
+        run: npm ci
+
+      - name: Install API Gateway dependencies
+        working-directory: backend/api-gateway
+        run: npm ci
+
+      - name: Run Auth Service tests
+        working-directory: backend/services/auth-service
+        run: npm test
+
+      - name: Run Expense Service tests
+        working-directory: backend/services/expense-service
+        run: npm test
+
+      - name: Run Analytics Service tests
+        working-directory: backend/services/analytics-service
+        run: npm test
+
+      - name: Run API Gateway tests
+        working-directory: backend/api-gateway
+        run: npm test
+
+
+  # ==========================================
+  # PHASE 2 - SONARQUBE
+  # ==========================================
+
+  sonarqube:
+    name: SonarQube SAST
+    needs: build-test
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      - name: SonarQube Quality Gate
+        uses: SonarSource/sonarqube-quality-gate-action@v1
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+
+  # ==========================================
+  # PHASE 3 - SCA
+  # ==========================================
+
+  sca:
+    name: Software Composition Analysis
+    needs: sonarqube
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service:
+          - auth-service
+          - expense-service
+          - analytics-service
+          - api-gateway
+
+    steps:
+
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        working-directory: backend/services/${{ matrix.service }}
+        run: npm ci
+
+      - name: Run npm audit
+        working-directory: backend/services/${{ matrix.service }}
+        run: npm audit --audit-level=high
