@@ -1,3 +1,4 @@
+```yaml
 name: DevSecOps Pipeline
 
 on:
@@ -12,7 +13,7 @@ on:
 jobs:
 
   # ==========================================
-  # PHASE 1 - BUILD & TEST
+  # PHASE 1 - BUILD
   # ==========================================
 
   build-test:
@@ -29,27 +30,62 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: backend/services/*/package-lock.json
+          cache-dependency-path: |
+            backend/services/auth-service/package-lock.json
+            backend/services/expense-service/package-lock.json
+            backend/services/analytics-service/package-lock.json
+            backend/services/api-gateway/package-lock.json
+
+      # ------------------------------------------
+      # Auth Service
+      # ------------------------------------------
 
       - name: Install Auth Service dependencies
         working-directory: backend/services/auth-service
         run: npm ci
 
+      # ------------------------------------------
+      # Expense Service
+      # ------------------------------------------
+
       - name: Install Expense Service dependencies
         working-directory: backend/services/expense-service
         run: npm ci
+
+      # ------------------------------------------
+      # Analytics Service
+      # ------------------------------------------
 
       - name: Install Analytics Service dependencies
         working-directory: backend/services/analytics-service
         run: npm ci
 
+      # ------------------------------------------
+      # API Gateway
+      # ------------------------------------------
+
       - name: Install API Gateway dependencies
         working-directory: backend/services/api-gateway
         run: npm ci
 
+      # ------------------------------------------
+      # IMPORTANT
+      # ------------------------------------------
+      # Your services currently do not have an
+      # "npm test" script.
+      #
+      # Therefore we are NOT running npm test.
+      #
+      # npm ci verifies that package-lock.json
+      # and package.json can install successfully.
+      #
+      # Later we can add Jest/Vitest tests and
+      # enable npm test here.
+      # ------------------------------------------
+
 
   # ==========================================
-  # PHASE 2 - SONARQUBE CLOUD SAST
+  # PHASE 2 - SONARCLOUD SAST
   # ==========================================
 
   sonarqube:
@@ -58,41 +94,58 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout source code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      # ------------------------------------------
+      # SonarCloud Scan
+      # ------------------------------------------
 
       - name: SonarQube Cloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
-  
-      - name: Test SonarCloud API
-        shell: bash
+
+      # ------------------------------------------
+      # Verify SonarCloud authentication
+      # ------------------------------------------
+
+      - name: Test SonarCloud Authentication
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           echo "Testing SonarCloud authentication..."
-      
-          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+
+          curl --fail --silent --show-error \
             -u "${SONAR_TOKEN}:" \
-            "https://sonarcloud.io/api/authentication/validate")
-      
-          echo "$RESPONSE"
-      
-          if echo "$RESPONSE" | grep -q "HTTP_STATUS:200"; then
-            echo "SonarCloud authentication successful"
-          else
-            echo "SonarCloud authentication failed"
-            exit 1
-          fi- name: SonarQube Quality Gate
-              uses: SonarSource/sonarqube-quality-gate-action@v1
-              timeout-minutes: 5
-              env:
-                SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-                SONAR_HOST_URL: https://sonarcloud.io
+            https://sonarcloud.io/api/authentication/validate
+
+          echo
+          echo "SonarCloud authentication successful"
+
+      # ------------------------------------------
+      # Show Sonar analysis task
+      # ------------------------------------------
+
+      - name: Show Sonar Analysis Task
+        run: |
+          echo "===== Sonar Analysis Task ====="
+          cat .scannerwork/report-task.txt
+
+      # ------------------------------------------
+      # SonarCloud Quality Gate
+      # ------------------------------------------
+
+      - name: SonarQube Quality Gate
+        uses: SonarSource/sonarqube-quality-gate-action@v1
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
 
 
   # ==========================================
@@ -122,10 +175,19 @@ jobs:
         with:
           node-version: 24
 
+      # ------------------------------------------
+      # Install dependencies
+      # ------------------------------------------
+
       - name: Install dependencies
         working-directory: backend/services/${{ matrix.service }}
         run: npm ci
 
+      # ------------------------------------------
+      # NPM Audit / SCA
+      # ------------------------------------------
+
       - name: Run npm audit
         working-directory: backend/services/${{ matrix.service }}
         run: npm audit --audit-level=high
+```
