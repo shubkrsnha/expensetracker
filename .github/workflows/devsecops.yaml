@@ -1,4 +1,3 @@
-```yaml
 name: DevSecOps Pipeline
 
 on:
@@ -190,4 +189,4 @@ jobs:
       - name: Run npm audit
         working-directory: backend/services/${{ matrix.service }}
         run: npm audit --audit-level=high
-```
+
