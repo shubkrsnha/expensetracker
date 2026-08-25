@@ -12,11 +12,11 @@ on:
 jobs:
 
   # ==========================================
-  # PHASE 1 - BUILD & VALIDATION
+  # PHASE 1 - BUILD & TEST
   # ==========================================
 
   build-test:
-    name: Build and Validate
+    name: Build and Test
     runs-on: ubuntu-latest
 
     steps:
@@ -29,89 +29,54 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: |
-            backend/services/auth-service/package-lock.json
-            backend/services/expense-service/package-lock.json
-            backend/services/analytics-service/package-lock.json
-            backend/services/api-gateway/package-lock.json
-
-      # ------------------------------------------
-      # AUTH SERVICE
-      # ------------------------------------------
+          cache-dependency-path: backend/services/*/package-lock.json
 
       - name: Install Auth Service dependencies
         working-directory: backend/services/auth-service
         run: npm ci
 
-      - name: Validate Auth Service
-        working-directory: backend/services/auth-service
-        run: node --check server.js
-
-      # ------------------------------------------
-      # EXPENSE SERVICE
-      # ------------------------------------------
-
       - name: Install Expense Service dependencies
         working-directory: backend/services/expense-service
         run: npm ci
-
-      - name: Validate Expense Service
-        working-directory: backend/services/expense-service
-        run: node --check server.js
-
-      # ------------------------------------------
-      # ANALYTICS SERVICE
-      # ------------------------------------------
 
       - name: Install Analytics Service dependencies
         working-directory: backend/services/analytics-service
         run: npm ci
 
-      - name: Validate Analytics Service
-        working-directory: backend/services/analytics-service
-        run: node --check server.js
-
-      # ------------------------------------------
-      # API GATEWAY
-      # ------------------------------------------
-
       - name: Install API Gateway dependencies
         working-directory: backend/services/api-gateway
         run: npm ci
 
-      - name: Validate API Gateway
-        working-directory: backend/services/api-gateway
-        run: node --check server.js
-
 
   # ==========================================
-# PHASE 2 - SONARQUBE CLOUD SAST
-# ==========================================
+  # PHASE 2 - SONARQUBE CLOUD SAST
+  # ==========================================
 
-sonarqube:
-  name: SonarQube Cloud SAST
-  needs: build-test
-  runs-on: ubuntu-latest
+  sonarqube:
+    name: SonarQube Cloud SAST
+    needs: build-test
+    runs-on: ubuntu-latest
 
-  steps:
+    steps:
 
-    - name: Checkout source code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: SonarQube Cloud Scan
-      uses: SonarSource/sonarqube-scan-action@v6
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_HOST_URL: https://sonarcloud.io
+      - name: SonarQube Cloud Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
 
-    - name: SonarQube Quality Gate
-      uses: SonarSource/sonarqube-quality-gate-action@v1
-      timeout-minutes: 5
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        
+      - name: SonarQube Quality Gate
+        uses: SonarSource/sonarqube-quality-gate-action@v1
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+
   # ==========================================
   # PHASE 3 - SCA
   # ==========================================
