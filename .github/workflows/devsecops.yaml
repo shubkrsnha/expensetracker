@@ -265,3 +265,102 @@ jobs:
         working-directory: backend/services/${{ matrix.service }}
         run: npm audit --audit-level=high
 
+  # ==========================================
+  # PHASE 4 - DOCKER BUILD + TRIVY
+  # ==========================================
+
+  docker-security:
+    name: Docker Build and Trivy Security Scan
+    needs: sca
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+
+          - service: auth-service
+            port: 5004
+
+          - service: expense-service
+            port: 5001
+
+          - service: analytics-service
+            port: 5002
+
+          - service: api-gateway
+            port: 5003
+
+    steps:
+
+      # ------------------------------------------
+      # Checkout
+      # ------------------------------------------
+
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+
+      # ------------------------------------------
+      # Docker Build
+      # ------------------------------------------
+
+      - name: Build Docker image
+        working-directory: backend/services/${{ matrix.service }}
+        run: |
+          docker build \
+            -t ${{ matrix.service }}:${{ github.sha }} \
+            .
+
+
+      # ------------------------------------------
+      # Verify Docker image
+      # ------------------------------------------
+
+      - name: Verify Docker image
+        run: |
+          docker images
+          docker image inspect \
+            ${{ matrix.service }}:${{ github.sha }}
+
+
+      # ------------------------------------------
+      # Trivy Container Scan
+      # ------------------------------------------
+
+      - name: Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: '${{ matrix.service }}:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+
+
+      # ------------------------------------------
+      # Trivy SARIF Report
+      # ------------------------------------------
+
+      - name: Trivy SARIF report
+        if: always()
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: '${{ matrix.service }}:${{ github.sha }}'
+          format: 'sarif'
+          output: 'trivy-${{ matrix.service }}.sarif'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+
+
+      # ------------------------------------------
+      # Upload Trivy Report
+      # ------------------------------------------
+
+      - name: Upload Trivy report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-${{ matrix.service }}
+          path: trivy-${{ matrix.service }}.sarif
+
+
