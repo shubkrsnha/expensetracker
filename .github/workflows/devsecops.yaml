@@ -1,3 +1,4 @@
+```yaml
 name: DevSecOps Pipeline
 
 on:
@@ -8,7 +9,6 @@ on:
   pull_request:
     branches:
       - main
-
 
 jobs:
 
@@ -25,7 +25,6 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -37,7 +36,6 @@ jobs:
             backend/services/analytics-service/package-lock.json
             backend/services/api-gateway/package-lock.json
 
-
       # ------------------------------------------
       # Auth Service
       # ------------------------------------------
@@ -45,7 +43,6 @@ jobs:
       - name: Install Auth Service dependencies
         working-directory: backend/services/auth-service
         run: npm ci
-
 
       # ------------------------------------------
       # Expense Service
@@ -55,7 +52,6 @@ jobs:
         working-directory: backend/services/expense-service
         run: npm ci
 
-
       # ------------------------------------------
       # Analytics Service
       # ------------------------------------------
@@ -63,7 +59,6 @@ jobs:
       - name: Install Analytics Service dependencies
         working-directory: backend/services/analytics-service
         run: npm ci
-
 
       # ------------------------------------------
       # API Gateway
@@ -73,21 +68,19 @@ jobs:
         working-directory: backend/services/api-gateway
         run: npm ci
 
-
       # ------------------------------------------
-      # NOTE
+      # IMPORTANT
       # ------------------------------------------
-      # Your services currently do not have an
-      # "npm test" script.
+      # Currently your services do not have
+      # an "npm test" script.
       #
-      # Therefore npm test is intentionally not
-      # executed.
+      # Therefore we are not running npm test.
       #
       # npm ci verifies that package.json and
-      # package-lock.json can install successfully.
+      # package-lock.json can install correctly.
       #
-      # Later, after adding Jest/Vitest tests,
-      # we can add npm test.
+      # Later we can add Jest/Vitest tests and
+      # enable npm test.
       # ------------------------------------------
 
 
@@ -107,7 +100,6 @@ jobs:
         with:
           fetch-depth: 0
 
-
       # ------------------------------------------
       # SonarCloud Scan
       # ------------------------------------------
@@ -118,17 +110,122 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
 
+      # ------------------------------------------
+      # Verify SonarCloud authentication
+      # ------------------------------------------
+
+      - name: Test SonarCloud Authentication
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          echo "Testing SonarCloud authentication..."
+
+          curl --fail --silent --show-error \
+            -u "${SONAR_TOKEN}:" \
+            https://sonarcloud.io/api/authentication/validate
+
+          echo
+          echo "SonarCloud authentication successful"
+
+      # ------------------------------------------
+      # Show Sonar analysis task
+      # ------------------------------------------
+
+      - name: Show Sonar Analysis Task
+        run: |
+          echo "===== Sonar Analysis Task ====="
+
+          if [ ! -f ".scannerwork/report-task.txt" ]; then
+            echo "ERROR: report-task.txt not found"
+            exit 1
+          fi
+
+          cat .scannerwork/report-task.txt
 
       # ------------------------------------------
       # SonarCloud Quality Gate
       # ------------------------------------------
 
-      - name: SonarQube Quality Gate
-        uses: SonarSource/sonarqube-quality-gate-action@v1
-        timeout-minutes: 5
+      - name: SonarQube Quality Gate Debug
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonarcloud.io
+        run: |
+          set -e
+
+          echo "======================================"
+          echo "SonarCloud Quality Gate Debug"
+          echo "======================================"
+
+          echo ""
+          echo "1. Checking authentication..."
+
+          curl --fail --silent --show-error \
+            -u "${SONAR_TOKEN}:" \
+            https://sonarcloud.io/api/authentication/validate
+
+          echo ""
+          echo "Authentication successful"
+
+          echo ""
+          echo "2. Reading Sonar analysis task..."
+
+          if [ ! -f ".scannerwork/report-task.txt" ]; then
+            echo "ERROR: report-task.txt not found"
+            exit 1
+          fi
+
+          cat .scannerwork/report-task.txt
+
+          echo ""
+          echo "3. Getting CE Task URL..."
+
+          CE_TASK_URL=$(grep '^ceTaskUrl=' .scannerwork/report-task.txt | cut -d'=' -f2-)
+
+          if [ -z "$CE_TASK_URL" ]; then
+            echo "ERROR: ceTaskUrl not found"
+            exit 1
+          fi
+
+          echo "CE task URL found"
+
+          echo ""
+          echo "4. Checking CE task..."
+
+          TASK_RESPONSE=$(curl \
+            --silent \
+            --show-error \
+            --fail \
+            --user "${SONAR_TOKEN}:" \
+            "${CE_TASK_URL}")
+
+          echo "$TASK_RESPONSE"
+
+          ANALYSIS_ID=$(echo "$TASK_RESPONSE" | jq -r '.task.analysisId')
+
+          if [ "$ANALYSIS_ID" = "null" ] || [ -z "$ANALYSIS_ID" ]; then
+            echo "ERROR: Analysis ID was not returned"
+            exit 1
+          fi
+
+          echo ""
+          echo "Analysis ID received"
+
+          echo ""
+          echo "5. Checking Quality Gate..."
+
+          QUALITY_GATE_URL="https://sonarcloud.io/api/qualitygates/project_status?analysisId=${ANALYSIS_ID}"
+
+          echo "Calling SonarCloud Quality Gate API..."
+
+          curl \
+            --silent \
+            --show-error \
+            --fail \
+            --user "${SONAR_TOKEN}:" \
+            "${QUALITY_GATE_URL}" | jq .
+
+          echo ""
+          echo "Quality Gate API request successful"
 
 
   # ==========================================
@@ -153,12 +250,10 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
-
 
       # ------------------------------------------
       # Install dependencies
@@ -167,7 +262,6 @@ jobs:
       - name: Install dependencies
         working-directory: backend/services/${{ matrix.service }}
         run: npm ci
-
 
       # ------------------------------------------
       # NPM Audit / SCA
@@ -198,11 +292,20 @@ jobs:
     steps:
 
       # ------------------------------------------
-      # Checkout
+      # Checkout source code
       # ------------------------------------------
 
       - name: Checkout source code
         uses: actions/checkout@v4
+
+
+      # ------------------------------------------
+      # Verify Docker
+      # ------------------------------------------
+
+      - name: Check Docker version
+        run: |
+          docker --version
 
 
       # ------------------------------------------
@@ -223,7 +326,11 @@ jobs:
 
       - name: Verify Docker image
         run: |
+          echo "Docker images:"
           docker images
+
+          echo ""
+          echo "Inspecting image:"
           docker image inspect ${{ matrix.service }}:${{ github.sha }}
 
 
@@ -239,3 +346,19 @@ jobs:
           exit-code: '1'
           ignore-unfixed: true
           severity: 'CRITICAL,HIGH'
+
+
+      # ------------------------------------------
+      # Trivy filesystem scan
+      # ------------------------------------------
+
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+```
