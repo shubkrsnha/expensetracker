@@ -69,12 +69,30 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
   
-      - name: SonarQube Quality Gate
-        uses: SonarSource/sonarqube-quality-gate-action@v1
-        timeout-minutes: 5
+      - name: Test SonarCloud API
+        shell: bash
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonarcloud.io
+        run: |
+          echo "Testing SonarCloud authentication..."
+      
+          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+            -u "${SONAR_TOKEN}:" \
+            "https://sonarcloud.io/api/authentication/validate")
+      
+          echo "$RESPONSE"
+      
+          if echo "$RESPONSE" | grep -q "HTTP_STATUS:200"; then
+            echo "SonarCloud authentication successful"
+          else
+            echo "SonarCloud authentication failed"
+            exit 1
+          fi- name: SonarQube Quality Gate
+              uses: SonarSource/sonarqube-quality-gate-action@v1
+              timeout-minutes: 5
+              env:
+                SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+                SONAR_HOST_URL: https://sonarcloud.io
 
 
   # ==========================================
