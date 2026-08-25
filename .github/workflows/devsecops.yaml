@@ -139,12 +139,87 @@ jobs:
       # SonarCloud Quality Gate
       # ------------------------------------------
 
-      - name: SonarQube Quality Gate
-        uses: SonarSource/sonarqube-quality-gate-action@v1
-        timeout-minutes: 5
+      - name: SonarQube Quality Gate Debug
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonarcloud.io
+        run: |
+          set -e
+
+          echo "======================================"
+          echo "SonarCloud Quality Gate Debug"
+          echo "======================================"
+
+          echo ""
+          echo "1. Checking authentication..."
+
+          curl --fail --silent --show-error \
+            -u "${SONAR_TOKEN}:" \
+            https://sonarcloud.io/api/authentication/validate
+
+          echo ""
+          echo "Authentication successful"
+
+          echo ""
+          echo "2. Reading Sonar analysis task..."
+
+          if [ ! -f ".scannerwork/report-task.txt" ]; then
+            echo "ERROR: report-task.txt not found"
+            exit 1
+          fi
+
+          cat .scannerwork/report-task.txt
+
+          echo ""
+          echo "3. Getting CE Task URL..."
+
+          CE_TASK_URL=$(grep '^ceTaskUrl=' .scannerwork/report-task.txt | cut -d'=' -f2-)
+
+          if [ -z "$CE_TASK_URL" ]; then
+            echo "ERROR: ceTaskUrl not found"
+            exit 1
+          fi
+
+          echo "CE task URL found"
+
+          echo ""
+          echo "4. Checking CE task..."
+
+          TASK_RESPONSE=$(curl \
+            --silent \
+            --show-error \
+            --fail \
+            --user "${SONAR_TOKEN}:" \
+            "${CE_TASK_URL}")
+
+          echo "$TASK_RESPONSE"
+
+          ANALYSIS_ID=$(echo "$TASK_RESPONSE" | jq -r '.task.analysisId')
+
+          if [ "$ANALYSIS_ID" = "null" ] || [ -z "$ANALYSIS_ID" ]; then
+            echo "ERROR: Analysis ID was not returned"
+            exit 1
+          fi
+
+          echo ""
+          echo "Analysis ID received"
+
+          echo ""
+          echo "5. Checking Quality Gate..."
+
+          QUALITY_GATE_URL="https://sonarcloud.io/api/qualitygates/project_status?analysisId=${ANALYSIS_ID}"
+
+          echo "Calling SonarCloud Quality Gate API..."
+
+          curl \
+            --silent \
+            --show-error \
+            --fail \
+            --user "${SONAR_TOKEN}:" \
+            "${QUALITY_GATE_URL}" | jq .
+
+          echo ""
+          echo "Quality Gate API request successful"
+
 
 
   # ==========================================
