@@ -1,3 +1,4 @@
+```yaml
 name: DevSecOps Pipeline
 
 on:
@@ -10,11 +11,17 @@ on:
       - main
 
 jobs:
+
+  # ============================================================
+  # PHASE 1 - BUILD
+  # ============================================================
+
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout source code
         uses: actions/checkout@v5
 
@@ -22,10 +29,187 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 24
-          cache: npm
 
-      - name: Install dependencies
+      # --------------------------------------------------------
+      # Auth Service
+      # --------------------------------------------------------
+
+      - name: Install Auth Service dependencies
+        working-directory: backend/services/auth-service
         run: npm ci
 
-      - name: Build application
+      - name: Build Auth Service
+        working-directory: backend/services/auth-service
         run: npm run build --if-present
+
+      # --------------------------------------------------------
+      # Expense Service
+      # --------------------------------------------------------
+
+      - name: Install Expense Service dependencies
+        working-directory: backend/services/expense-service
+        run: npm ci
+
+      - name: Build Expense Service
+        working-directory: backend/services/expense-service
+        run: npm run build --if-present
+
+      # --------------------------------------------------------
+      # Analytics Service
+      # --------------------------------------------------------
+
+      - name: Install Analytics Service dependencies
+        working-directory: backend/services/analytics-service
+        run: npm ci
+
+      - name: Build Analytics Service
+        working-directory: backend/services/analytics-service
+        run: npm run build --if-present
+
+      # --------------------------------------------------------
+      # API Gateway
+      # --------------------------------------------------------
+
+      - name: Install API Gateway dependencies
+        working-directory: backend/services/api-gateway
+        run: npm ci
+
+      - name: Build API Gateway
+        working-directory: backend/services/api-gateway
+        run: npm run build --if-present
+
+
+  # ============================================================
+  # PHASE 2 - SONARCLOUD SAST
+  # ============================================================
+
+  sonarqube:
+    name: SonarCloud SAST
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout source code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+
+      - name: Verify SonarCloud Authentication
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          echo "Testing SonarCloud authentication..."
+
+          curl --fail --silent --show-error \
+            -u "${SONAR_TOKEN}:" \
+            https://sonarcloud.io/api/authentication/validate
+
+          echo
+          echo "SonarCloud authentication successful"
+
+      - name: SonarCloud Quality Gate
+        uses: SonarSource/sonarqube-quality-gate-action@v1
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+
+
+  # ============================================================
+  # PHASE 3 - SOFTWARE COMPOSITION ANALYSIS
+  # ============================================================
+
+  sca:
+    name: SCA - Dependency Security
+    needs: sonarqube
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service:
+          - auth-service
+          - expense-service
+          - analytics-service
+          - api-gateway
+
+    steps:
+
+      - name: Checkout source code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        working-directory: backend/services/${{ matrix.service }}
+        run: npm ci
+
+      - name: Run npm audit
+        working-directory: backend/services/${{ matrix.service }}
+        run: npm audit --audit-level=high
+
+
+  # ============================================================
+  # PHASE 4 - DOCKER BUILD + TRIVY
+  # ============================================================
+
+  docker-security:
+    name: Docker Build and Trivy Scan
+    needs: sca
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service:
+          - auth-service
+          - expense-service
+          - analytics-service
+          - api-gateway
+
+    steps:
+
+      - name: Checkout source code
+        uses: actions/checkout@v5
+
+      # --------------------------------------------------------
+      # Docker Build
+      # --------------------------------------------------------
+
+      - name: Build Docker image
+        working-directory: backend/services/${{ matrix.service }}
+        run: |
+          docker build \
+            -t ${{ matrix.service }}:${{ github.sha }} \
+            .
+
+      # --------------------------------------------------------
+      # Verify Docker Image
+      # --------------------------------------------------------
+
+      - name: Verify Docker image
+        run: |
+          docker images
+          docker image inspect ${{ matrix.service }}:${{ github.sha }}
+
+      # --------------------------------------------------------
+      # Trivy Container Scan
+      # --------------------------------------------------------
+
+      - name: Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ matrix.service }}:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+```
