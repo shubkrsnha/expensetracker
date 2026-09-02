@@ -94,11 +94,19 @@ jobs:
         with:
           fetch-depth: 0
 
+      # --------------------------------------------------------
+      # SonarCloud Scan
+      # --------------------------------------------------------
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
+
+      # --------------------------------------------------------
+      # Verify SonarCloud Authentication
+      # --------------------------------------------------------
 
       - name: Verify SonarCloud Authentication
         env:
@@ -113,12 +121,84 @@ jobs:
           echo
           echo "SonarCloud authentication successful"
 
-      - name: SonarCloud Quality Gate
-        uses: SonarSource/sonarqube-quality-gate-action@v1
-        timeout-minutes: 5
+      # --------------------------------------------------------
+      # Wait for SonarCloud Analysis
+      # --------------------------------------------------------
+
+      - name: Check SonarCloud Quality Gate
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonarcloud.io
+        run: |
+          set -e
+
+          echo "Reading SonarCloud analysis information..."
+
+          if [ ! -f ".scannerwork/report-task.txt" ]; then
+            echo "ERROR: .scannerwork/report-task.txt not found"
+            exit 1
+          fi
+
+          CE_TASK_URL=$(grep '^ceTaskUrl=' .scannerwork/report-task.txt | cut -d'=' -f2-)
+
+          if [ -z "$CE_TASK_URL" ]; then
+            echo "ERROR: ceTaskUrl not found"
+            exit 1
+          fi
+
+          echo "CE Task URL found"
+
+          echo "Waiting for SonarCloud analysis..."
+
+          for i in {1..30}; do
+
+            RESPONSE=$(curl --fail --silent --show-error \
+              -u "${SONAR_TOKEN}:" \
+              "$CE_TASK_URL")
+
+            STATUS=$(echo "$RESPONSE" | jq -r '.task.status')
+
+            echo "Analysis status: $STATUS"
+
+            if [ "$STATUS" = "SUCCESS" ]; then
+              ANALYSIS_ID=$(echo "$RESPONSE" | jq -r '.task.analysisId')
+              break
+            fi
+
+            if [ "$STATUS" = "FAILED" ]; then
+              echo "ERROR: SonarCloud analysis failed"
+              echo "$RESPONSE"
+              exit 1
+            fi
+
+            sleep 10
+
+          done
+
+          if [ -z "$ANALYSIS_ID" ]; then
+            echo "ERROR: SonarCloud analysis did not complete"
+            exit 1
+          fi
+
+          echo "Analysis ID: $ANALYSIS_ID"
+
+          echo "Checking SonarCloud Quality Gate..."
+
+          QUALITY_GATE=$(curl --fail --silent --show-error \
+            -u "${SONAR_TOKEN}:" \
+            "https://sonarcloud.io/api/qualitygates/project_status?analysisId=${ANALYSIS_ID}")
+
+          echo "$QUALITY_GATE" | jq .
+
+          QUALITY_STATUS=$(echo "$QUALITY_GATE" | jq -r '.projectStatus.status')
+
+          echo "Quality Gate Status: $QUALITY_STATUS"
+
+          if [ "$QUALITY_STATUS" != "OK" ]; then
+            echo "ERROR: SonarCloud Quality Gate failed"
+            exit 1
+          fi
+
+          echo "SonarCloud Quality Gate passed successfully"
 
 
   # ============================================================
