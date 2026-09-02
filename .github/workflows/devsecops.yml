@@ -10,13 +10,11 @@ on:
       - main
 
 jobs:
-
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout source code
         uses: actions/checkout@v5
 
@@ -24,15 +22,13 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 24
+          cache: npm
 
       - name: Install dependencies
-        working-directory: backend/expense-service
         run: npm ci
 
       - name: Run tests
-        working-directory: backend/expense-service
         run: npm test
 
       - name: Build application
-        working-directory: backend/expense-service
         run: npm run build --if-present
