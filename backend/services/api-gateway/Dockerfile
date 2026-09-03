@@ -38,11 +38,15 @@ WORKDIR /app
 RUN apk update && \
     apk upgrade --no-cache
 
-# Copy only required files from builder
+# Upgrade npm to patched version
+RUN npm install -g npm@11.19.1
+
+# Copy application dependencies
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/package-lock.json ./
 COPY --from=builder /app/node_modules ./node_modules
 
+# Copy application
 COPY --from=builder /app/app.js ./
 COPY --from=builder /app/server.js ./
 COPY --from=builder /app/config ./config
