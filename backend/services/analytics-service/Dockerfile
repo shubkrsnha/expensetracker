@@ -1,17 +1,14 @@
-# ================================
+# ==========================================
 # Stage 1: Builder
-# ================================
+# ==========================================
 FROM node:24-alpine AS builder
 
 WORKDIR /app
 
-# Copy dependency manifests first for better layer caching
 COPY package*.json ./
 
-# Install production dependencies only
 RUN npm ci --omit=dev
 
-# Copy application source
 COPY controllers ./controllers
 COPY middleware ./middleware
 COPY routes ./routes
@@ -20,18 +17,27 @@ COPY app.js ./
 COPY server.js ./
 
 
-# ================================
+# ==========================================
 # Stage 2: Runtime
-# ================================
+# ==========================================
 FROM node:24-alpine AS runtime
 
 WORKDIR /app
 
-# Security: run as non-root user
+ENV NODE_ENV=production
+
+# Update Alpine packages
+RUN apk update && \
+    apk upgrade --no-cache && \
+    apk add --no-cache --upgrade libcrypto3 libssl3
+
+# npm is not required at runtime
+RUN rm -rf /usr/local/lib/node_modules/npm
+
+# Create non-root user
 RUN addgroup -S nodeapp && \
     adduser -S nodeapp -G nodeapp
 
-# Copy only production dependencies and application
 COPY --from=builder --chown=nodeapp:nodeapp /app/node_modules ./node_modules
 COPY --from=builder --chown=nodeapp:nodeapp /app/controllers ./controllers
 COPY --from=builder --chown=nodeapp:nodeapp /app/middleware ./middleware
