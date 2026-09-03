@@ -11,7 +11,7 @@ COPY package*.json ./
 # Install production dependencies
 RUN npm ci --omit=dev
 
-# Copy the complete application source
+# Copy application source
 COPY app.js ./
 COPY server.js ./
 COPY config ./config
@@ -32,7 +32,17 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Run as non-root user
+# Update Alpine OS packages
+RUN apk update && \
+    apk upgrade --no-cache && \
+    apk add --no-cache --upgrade libcrypto3 libssl3
+
+# npm is required only during the build stage.
+# The production application runs with Node.js directly.
+# Removing npm also removes vulnerabilities from npm's bundled packages.
+RUN rm -rf /usr/local/lib/node_modules/npm
+
+# Create non-root user
 RUN addgroup -S nodejs && \
     adduser -S nodejs -G nodejs
 
